@@ -44,7 +44,12 @@
 #define net_h
 
 #include <sys/types.h>
-#include <sys/socket.h>
+#ifdef HAVE_SYS_SOCKET_H
+# include <sys/socket.h>
+#endif
+#ifdef HAVE_WINSOCK2_H
+# include <winsock2.h>
+#endif
 
 #include "../include/sane/sanei_wire.h"
 #include "../include/sane/config.h"

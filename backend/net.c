@@ -64,8 +64,10 @@
 #include <sys/time.h>
 #include <sys/types.h>
 
-#include <netinet/in.h>
-#include <netdb.h> /* OS/2 needs this _after_ <netinet/in.h>, grrr... */
+#ifdef HAVE_NETINET_IN_H
+# include <netinet/in.h>
+# include <netdb.h> /* OS/2 needs this _after_ <netinet/in.h>, grrr... */
+#endif
 
 #ifdef WITH_AVAHI
 # include <avahi-client/client.h>
