@@ -2198,8 +2198,17 @@ sane_read (SANE_Handle handle, SANE_Byte * data, SANE_Int max_length,
 	  DBG (2, "sane_read: received error signal\n");
 
 	  /* turn off non-blocking I/O (s->data will be closed anyhow): */
-	  fcntl (s->data, F_SETFL, 0);
-
+#ifdef HAVE_SYS_SOCKET_H
+      if (fcntl (s->data, F_SETFL, 0) < 0)
+#elif defined HAVE_WINSOCK2_H
+      u_long nonblock = 0;
+      if (NO_ERROR != ioctlsocket (s->data, FIONBIO, &nonblock))
+#endif
+        {
+          DBG (1, "sane_set_io_mode: fcntl failed (%s)\n", strerror (errno));
+          do_cancel (s);
+          return SANE_STATUS_IO_ERROR;
+        }
 	  /* read the status byte: */
 	  if (read (s->data, &ch, sizeof (ch)) != 1)
 	    {
@@ -2352,7 +2361,12 @@ sane_set_io_mode (SANE_Handle handle, SANE_Bool non_blocking)
       return SANE_STATUS_INVAL;
     }
 
+#ifdef HAVE_SYS_SOCKET_H
   if (fcntl (s->data, F_SETFL, non_blocking ? O_NONBLOCK : 0) < 0)
+#elif defined HAVE_WINSOCK2_H
+  u_long nonblock = non_blocking ? 1 : 0;
+  if (NO_ERROR != ioctlsocket (s->data, FIONBIO, &nonblock))
+#endif
     {
       DBG (1, "sane_set_io_mode: fcntl failed (%s)\n", strerror (errno));
       return SANE_STATUS_IO_ERROR;
